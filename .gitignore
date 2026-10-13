@@ -1,0 +1,12 @@
+state/
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+build/
+dist/
+*.db
+*.db-wal
+*.db-shm
+wxdb.json
+.env

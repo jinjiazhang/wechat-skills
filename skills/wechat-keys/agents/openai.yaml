@@ -1,0 +1,4 @@
+interface:
+  display_name: "微信密钥获取"
+  short_description: "获取本机已登录微信账号的数据库密钥和图片密钥，用于建立或修复本地读取配置。"
+  default_prompt: "使用 $wechat-keys 完成本机微信数据操作，并检查返回状态。"

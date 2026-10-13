@@ -1,0 +1,4 @@
+interface:
+  display_name: "微信聊天记录读取"
+  short_description: "只读列出本机微信会话、联系人、历史与未读消息，解析文本和引用回复，供聊天分析或 agent 上下文使用。"
+  default_prompt: "使用 $wechat-records 完成本机微信数据操作，并检查返回状态。"

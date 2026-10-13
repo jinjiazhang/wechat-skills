@@ -1,0 +1,7 @@
+{
+  "platform": "windows-x64",
+  "sha256": {
+    "sqlcipher.exe": "aa6ff2dfe0770a6e34d1e7cbe2fd86ee7549c47897512a4d2e17a7732d9b3be9",
+    "libcrypto-3-x64.dll": "1baa4840383ecbf2d02b4e6a22dc9cad7a7d66c555603dce615a0cf0476154d6"
+  }
+}

@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wechat-local-skills"
+version = "0.1.0"
+description = "Local WeChat keys, records and media CLIs for agent integration"
+requires-python = ">=3.10"
+dependencies = ["zstandard>=0.22"]
+
+[project.optional-dependencies]
+media = ["Pillow>=10", "imageio-ffmpeg>=0.6"]
+
+[project.scripts]
+wechat-keys = "wechat_cli.cli:keys_main"
+wechat-records = "wechat_cli.cli:records_main"
+wechat-media = "wechat_cli.cli:media_main"
+
+[tool.setuptools]
+packages = ["wechat_cli", "wxdb", "vendor"]
+
+[tool.setuptools.package-data]
+vendor = ["LICENSE.*"]

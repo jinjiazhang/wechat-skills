@@ -1,0 +1,4 @@
+interface:
+  display_name: "微信图片与语音读取"
+  short_description: "定位并导出本机微信图片与语音，支持加密图片和 WXGF 首帧，用于查看聊天附件或验证媒体解析。"
+  default_prompt: "使用 $wechat-media 完成本机微信数据操作，并检查返回状态。"
