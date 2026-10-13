@@ -9,7 +9,6 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Optional
 
 from .config import get_config
 from .sqlcipher import run_query

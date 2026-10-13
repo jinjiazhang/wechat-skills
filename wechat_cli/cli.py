@@ -52,6 +52,44 @@ def parser_for(mode):
                 p.add_argument('--raw', action='store_true', help='Include original XML and raw decode fields')
             if name in ('sessions', 'unread'):
                 p.add_argument('--include-hidden', action='store_true')
+    elif mode == 'send':
+        p = sub.add_parser('text')
+        common_config(p)
+        p.add_argument('--state', type=Path, default=Path('state/chat.sqlite'))
+        p.add_argument('--session', required=True)
+        p.add_argument('--self', dest='sender', required=True)
+        p.add_argument('--ui-name')
+        p.add_argument('--token', required=True)
+        p.add_argument('--text-file', type=Path, required=True, help='UTF-8 text file; use - for stdin')
+        p.add_argument('--execute', action='store_true')
+        p = sub.add_parser('reconcile')
+        common_config(p)
+        p.add_argument('--state', type=Path, default=Path('state/chat.sqlite'))
+        p.add_argument('--token', required=True)
+        p.add_argument('--confirm-not-sent', action='store_true', help='Operator confirmed no send; abandon uncertain token')
+        sub.add_parser('inspect')
+    elif mode == 'agent':
+        p = sub.add_parser('init')
+        common_config(p)
+        p.add_argument('--state', type=Path, default=Path('state/chat.sqlite'))
+        p.add_argument('--name', required=True)
+        p.add_argument('--session', required=True)
+        p.add_argument('--self', dest='sender', required=True)
+        p.add_argument('--style', default='简洁、自然地回复，不编造未读取的信息。')
+        p.add_argument('--max-sends', type=nonnegative, default=10)
+        p.add_argument('--cooldown', type=nonnegative, default=3)
+        p.add_argument('--replay-last', type=nonnegative, default=0, help='Explicitly replay N existing messages for testing')
+        for command in ('next', 'reply', 'skip', 'status', 'stop', 'start'):
+            p = sub.add_parser(command)
+            p.add_argument('--state', type=Path, default=Path('state/chat.sqlite'))
+            p.add_argument('--name', required=True)
+            if command == 'next':
+                p.add_argument('--wait', type=nonnegative, default=0, help='Bounded wait, at most 60 seconds')
+            if command in ('reply', 'skip'):
+                p.add_argument('--ticket', required=True)
+            if command == 'reply':
+                p.add_argument('--text-file', type=Path, required=True)
+                p.add_argument('--execute', action='store_true')
     else:
         p = sub.add_parser('images')
         common_config(p)
@@ -99,6 +137,39 @@ def readable(row, raw=False):
 
 
 def dispatch(mode, args):
+    def read_text():
+        return sys.stdin.read() if str(args.text_file) == '-' else args.text_file.read_text(encoding='utf-8-sig')
+    if mode == 'send':
+        from .sending import send, reconcile
+        if args.command == 'inspect':
+            from .windows_sender import WindowsSender
+            return WindowsSender().inspect()
+        if args.command == 'reconcile':
+            return reconcile(args.config, args.state, args.token, args.confirm_not_sent)
+        return send(args.config, args.state, args.session, args.sender, read_text(), args.token,
+                    args.execute, args.ui_name)
+    if mode == 'agent':
+        from . import agent
+        if args.command == 'init':
+            return agent.initialize(args.config, args.state, args.name, args.session, args.sender, args.style,
+                                    args.max_sends, args.cooldown, args.replay_last)
+        if args.command == 'next':
+            import time
+            if args.wait > 60:
+                raise ValueError('wait must be at most 60')
+            deadline = time.monotonic() + args.wait
+            while True:
+                result = agent.next_batch(args.state, args.name)
+                if result['status'] != 'idle' or time.monotonic() >= deadline:
+                    return result
+                time.sleep(min(2, max(0, deadline - time.monotonic())))
+        if args.command == 'reply':
+            return agent.reply(args.state, args.name, args.ticket, read_text(), args.execute)
+        if args.command == 'skip':
+            return agent.skip(args.state, args.name, args.ticket)
+        if args.command in ('stop', 'start'):
+            return agent.set_active(args.state, args.name, args.command == 'start')
+        return agent.status(args.state, args.name)
     if mode == 'keys':
         from .keys import discover, extract, image_key
         if args.command == 'discover':
@@ -147,6 +218,10 @@ def run(mode, argv=None):
         print(json.dumps(result, ensure_ascii=False))
         return 1 if partial else 0
     except Exception as exc:
+        from .chat_state import ChatError
+        if isinstance(exc, ChatError):
+            print(json.dumps({'schema_version': 1, 'ok': False, 'error': {'code': exc.code, 'message': str(exc)}}, ensure_ascii=False))
+            return 1
         # No exception payloads: SQL errors can contain keys or private message bodies.
         code = {FileNotFoundError: 'NOT_FOUND', FileExistsError: 'OUTPUT_EXISTS',
                 ValueError: 'INVALID_ARGUMENT', ModuleNotFoundError: 'DEPENDENCY_MISSING'}.get(type(exc), 'OPERATION_FAILED')
@@ -170,3 +245,11 @@ def records_main():
 
 def media_main():
     return run('media')
+
+
+def send_main():
+    return run('send')
+
+
+def agent_main():
+    return run('agent')

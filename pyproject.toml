@@ -11,14 +11,18 @@ dependencies = ["zstandard>=0.22"]
 
 [project.optional-dependencies]
 media = ["Pillow>=10", "imageio-ffmpeg>=0.6"]
+send = ["Pillow>=10", "pywin32>=308; sys_platform == 'win32'", "pyperclip>=1.9"]
 
 [project.scripts]
 wechat-keys = "wechat_cli.cli:keys_main"
 wechat-records = "wechat_cli.cli:records_main"
 wechat-media = "wechat_cli.cli:media_main"
+wechat-send = "wechat_cli.cli:send_main"
+wechat-agent = "wechat_cli.cli:agent_main"
 
 [tool.setuptools]
 packages = ["wechat_cli", "wxdb", "vendor"]
 
 [tool.setuptools.package-data]
 vendor = ["LICENSE.*"]
+wechat_cli = ["*.ps1"]

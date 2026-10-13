@@ -5,7 +5,7 @@ if (-not (Test-Path -LiteralPath $venvPython)) {
     & python -m venv (Join-Path $repoRoot '.venv')
     if ($LASTEXITCODE -ne 0) { throw 'Failed to create Python virtual environment' }
 }
-& $venvPython -m pip install -e "${repoRoot}[media]"
+& $venvPython -m pip install -e "${repoRoot}[media,send]"
 if ($LASTEXITCODE -ne 0) { throw 'Failed to install dependencies' }
 & $venvPython (Join-Path $PSScriptRoot 'check_runtime.py')
 if ($LASTEXITCODE -ne 0) { throw 'Runtime check failed' }

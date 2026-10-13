@@ -1,5 +1,4 @@
 """Verify bundled tools and imports without reading account secrets."""
-import ctypes
 import hashlib
 import json
 from pathlib import Path

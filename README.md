@@ -36,7 +36,11 @@ wechat-media images --config state/wxdb.json --session filehelper --output state
 
 stdout 为单个 UTF-8 JSON，成功退出 0，失败退出 1；`--help` 为人类可读文本。先解析 `ok`，再处理 `data`；大整数消息 ID 输出为字符串。完整返回约定见 [CLI 契约](docs/cli-contract.md)。
 
-推荐链路：选择账号 → 获取配置 → 选择准确会话 username → 获取消息 → 按需读取媒体 → 构造回复上下文。尚未包含消息发送、自动循环或已读状态修改。后续发送模块应单独管理发送授权、重复发送防护和状态，不能把查询成功直接解释为可自动发送。
+推荐链路：选择账号 → 获取配置 → 选择准确会话 username → 获取消息 → 按需读取媒体 → 构造回复上下文。
+
+新增实验性 `wechat-send` 和 `wechat-agent` CLI，可通过各自的 `--help` 查看命令。agent 使用 `init → next → reply` 串联流程，由当前助手生成回复，不调用外部模型 API，也不启动后台聊天进程。发送默认仅预览，显式传入 `--execute` 才执行；本地 SQLite 保存待回复批次、发送上限和去重状态。发送结果不确定时先用 `wechat-send reconcile` 核对，不应更换 token 盲目重发。
+
+发送后端通过本地 Win32 输入和 Windows OCR 操作微信窗口，需要窗口前台可用；当前仍受焦点和界面识别问题影响，尚未完成真实发送端到端验证。单元测试通过不代表实聊发送成功。新增发送与 agent 的独立 skill 尚未完成，现有三个技能和读取功能可继续使用。
 
 ## 验证与来源
 
